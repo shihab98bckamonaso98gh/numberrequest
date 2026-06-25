@@ -1,6 +1,5 @@
 import aiosqlite
 import logging
-from datetime import datetime
 from typing import List, Optional, Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -39,7 +38,6 @@ class Database:
         """)
         await self.db.commit()
 
-    # ---------- User custom username ----------
     async def set_user_custom_username(self, user_id: int, custom_username: str):
         await self.db.execute(
             "INSERT OR REPLACE INTO user_settings (user_id, custom_username) VALUES (?, ?)",
@@ -58,7 +56,6 @@ class Database:
         row = await cursor.fetchone()
         return row["custom_username"] if row else None
 
-    # ---------- Requests ----------
     async def add_request(self, user_id: int, full_name: str, telegram_username: str,
                           custom_username: str, amount: int) -> int:
         cursor = await self.db.execute(

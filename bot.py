@@ -26,15 +26,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 # -----------------------------------
 
-# Conversation states
-ASK_USERNAME = 0   # used only when user has no stored username
+ASK_USERNAME = 0
 ASK_AMOUNT = 1
 SET_USERNAME_ADD = 2
 
-# Global database instance
 db = Database()
 
-# ---------- Keyboards with vivid emojis ----------
+# ---------- Keyboards ----------
 def main_menu_keyboard():
     return ReplyKeyboardMarkup(
         [
@@ -59,12 +57,8 @@ def set_username_menu_keyboard():
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome! Choose an option:", reply_markup=main_menu_keyboard())
 
-# ---------- Set Username Flow ----------
 async def set_username_entry(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Manage your saved username:",
-        reply_markup=set_username_menu_keyboard()
-    )
+    await update.message.reply_text("Manage your saved username:", reply_markup=set_username_menu_keyboard())
 
 async def set_username_add_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Send me the username you want to save:")
@@ -73,10 +67,7 @@ async def set_username_add_prompt(update: Update, context: ContextTypes.DEFAULT_
 async def set_username_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE):
     new_username = update.message.text.strip()
     await db.set_user_custom_username(update.effective_user.id, new_username)
-    await update.message.reply_text(
-        f"✅ Username '{new_username}' saved.",
-        reply_markup=main_menu_keyboard()
-    )
+    await update.message.reply_text(f"✅ Username '{new_username}' saved.", reply_markup=main_menu_keyboard())
     return ConversationHandler.END
 
 async def set_username_remove(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -86,7 +77,6 @@ async def set_username_remove(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Main menu:", reply_markup=main_menu_keyboard())
 
-# ---------- Number Request Conversation ----------
 async def number_request_entry(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     stored_username = await db.get_user_custom_username(user_id)
@@ -127,7 +117,6 @@ async def ask_amount(update: Update, context: ContextTypes.DEFAULT_TYPE):
         amount=amount
     )
 
-    # Admin notification with styled complete button
     admin_text = (
         f"📥 <b>New Number Request</b>\n\n"
         f"👤 User: {user.full_name} (ID: <code>{user.id}</code>)\n"
@@ -164,7 +153,6 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
     return ConversationHandler.END
 
-# ---------- Admin Complete Callback ----------
 async def complete_request_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
@@ -195,7 +183,6 @@ async def complete_request_callback(update: Update, context: ContextTypes.DEFAUL
     except Exception as e:
         logger.error(f"Could not notify user {request['user_id']}: {e}")
 
-# ---------- History (no log spam) ----------
 async def show_history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     is_admin = (user_id == config.ADMIN_USER_ID)
@@ -229,7 +216,6 @@ async def main():
 
     app = Application.builder().token(config.BOT_TOKEN).build()
 
-    # Conversation: Number Request
     number_request_conv = ConversationHandler(
         entry_points=[MessageHandler(filters.Regex("^📩 Number Request$"), number_request_entry)],
         states={
@@ -240,7 +226,6 @@ async def main():
         allow_reentry=True
     )
 
-    # Conversation: Set Username → Add
     set_username_conv = ConversationHandler(
         entry_points=[MessageHandler(filters.Regex("^➕ Add$"), set_username_add_prompt)],
         states={
