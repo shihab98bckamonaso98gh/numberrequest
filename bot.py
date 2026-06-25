@@ -214,6 +214,7 @@ async def main():
     logger.info(f"Bot starting. Admin chat: {config.ADMIN_CHAT_ID}, Admin user: {config.ADMIN_USER_ID}")
     logger.info("Bot started polling")
 
+    # Build application with python-telegram-bot 20.10+
     app = Application.builder().token(config.BOT_TOKEN).build()
 
     number_request_conv = ConversationHandler(
